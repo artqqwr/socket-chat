@@ -8,7 +8,7 @@
 - [ ] Password Hashing
 - [X] Text messaging
 - [ ] Private Messaging
-- [ ] Roles (admin and user). Admin can kick users
-- [X] Error Notifications
+- [ ] **IN PROGRESS** Roles (admin and user). Admin can kick users
+- [X] Error/System Notifications
 - [X] Database (sqlite)
 - [ ] FileMessage...
