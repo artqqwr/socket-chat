@@ -3,9 +3,9 @@ package com.artqqwr.socketchat.user;
 public class UserInfo {
     private String username;
     private String password;
-    private String role;
+    private Role role;
 
-    public UserInfo(String username, String password, String role) {
+    public UserInfo(String username, String password, Role role) {
         this.username = username;
         this.password = password;
         this.role = role;
@@ -27,11 +27,11 @@ public class UserInfo {
         this.password = password;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 }

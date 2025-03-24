@@ -20,9 +20,19 @@ public class Client {
     private BufferedReader in;
     private PrintWriter out;
 
+    private String username;
+
     public Client(String host, int port) {
         this.host = host;
         this.port = port;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public void connect() {
@@ -30,26 +40,25 @@ public class Client {
             socket = new Socket(host, port);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
-            System.out.println("Connected to server " + host + ":" + port);
+            System.out.printf("Connected to server %s:%d\n", host, port);
 
             new Thread(() -> {
                 String json;
                 try {
                     while ((json = in.readLine()) != null) {
                         Message msg = MessageSerializer.deserialize(json);
-                        if (msg instanceof TextMessage) {
-                            System.out.println("[" + msg.getSender() + "]: " + ((TextMessage) msg).getText());
-                        } else if (msg instanceof CommandMessage) {
-                            CommandMessage cmdMsg = (CommandMessage) msg;
-                            System.out.println("SERVER: " + msg.getSender() + " " + cmdMsg.getArgument());
-                        } else if (msg instanceof ErrorMessage) {
-                            ErrorMessage errMsg = (ErrorMessage) msg;
-                            System.out.println("ERROR from " + msg.getSender() + ": " + errMsg.getError());
-                        } else if (msg instanceof NotificationMessage) {
-                            NotificationMessage notificationMessage = (NotificationMessage) msg;
-                            System.out.println("INFO from " + msg.getSender() + ": " + notificationMessage.getNotification());
-                        } else {
-                            System.out.println("Unknown message: " + json);
+                        switch (msg) {
+                            case TextMessage textMsg ->
+                                System.out.printf("[%s]: %s\n", textMsg.getSender(), textMsg.getText());
+                            case CommandMessage cmdMsg ->
+                                System.out.printf("SERVER: %s %s\n", cmdMsg.getSender(), cmdMsg.getArgument());
+                            case ErrorMessage errorMsg ->
+                                System.out.printf("ERROR from %s: %s\n", errorMsg.getSender(), errorMsg.getError());
+                            case NotificationMessage notificationMsg ->
+                                System.out.printf("INFO from %s: %s\n", notificationMsg.getSender(),
+                                        notificationMsg.getNotification());
+                            default ->
+                                System.out.println("Unknown message: " + json);
                         }
                     }
                 } catch (IOException e) {
@@ -62,11 +71,20 @@ public class Client {
         }
     }
 
-    public void sendMessage(Message message) {
-        if (out != null) {
-            var json = MessageSerializer.serialize(message);
-            out.println(json);
-        }
+    private void sendMessage(Message message) {
+        if (out == null)
+            return;
+
+        String json = MessageSerializer.serialize(message);
+        out.println(json);
+    }
+
+    public void sendTextMessage(String text) {
+        sendMessage(new TextMessage(this.username, text));
+    }
+
+    public void sendCommandMessage(String command, String password, String argument) {
+        sendMessage(new CommandMessage(this.username, command, password, argument));
     }
 
     public void disconnect() {

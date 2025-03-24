@@ -12,12 +12,12 @@ public class UserDAO {
 
     static {
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             Statement stmt = conn.createStatement()) {
+                Statement stmt = conn.createStatement()) {
             String sql = "CREATE TABLE IF NOT EXISTS users (" +
-                         "username TEXT PRIMARY KEY," +
-                         "password TEXT NOT NULL," +
-                         "role TEXT NOT NULL" +
-                         ");";
+                    "username TEXT PRIMARY KEY," +
+                    "password TEXT NOT NULL," +
+                    "role TEXT NOT NULL" +
+                    ");";
             stmt.execute(sql);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -27,13 +27,14 @@ public class UserDAO {
     public static UserInfo validateUser(String username, String password) {
         String sql = "SELECT username, password, role FROM users WHERE username = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 String dbPassword = rs.getString("password");
                 if (dbPassword.equals(password)) {
-                    String role = rs.getString("role");
+                    String roleStr = rs.getString("role");
+                    Role role = Role.fromString(roleStr);
                     return new UserInfo(username, password, role);
                 }
             }
@@ -47,7 +48,7 @@ public class UserDAO {
         String checkSql = "SELECT username FROM users WHERE username = ?";
         String insertSql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+                PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
             checkPs.setString(1, username);
             ResultSet rs = checkPs.executeQuery();
             if (rs.next()) {
@@ -56,7 +57,7 @@ public class UserDAO {
             try (PreparedStatement insertPs = conn.prepareStatement(insertSql)) {
                 insertPs.setString(1, username);
                 insertPs.setString(2, password);
-                insertPs.setString(3, "user");
+                insertPs.setString(3, Role.USER.name());
                 insertPs.executeUpdate();
                 return true;
             }
